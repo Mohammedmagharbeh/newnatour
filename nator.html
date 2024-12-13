@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حساب الديون</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .form-container {
+      margin: 20px 0;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button {
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    .total {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    #button {
+      width: 150px;
+      font-size: 18px;
+      padding: 12px 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s, transform 0.3s;
+      text-align: center;
+    }
+
+    #button:hover {
+      background-color: #218838;
+      transform: translateY(-3px);
+    }
+
+    #button:active {
+      transform: translateY(2px);
+    }
+  </style>
+</head>
+<body>
+<a href="index.html"> 
+    <button id="button">ع الجرد ي كبير⬅️</button>
+</a>
+  <h1>حساب الديون (دائن ومدين)</h1>
+
+  <!-- فورم لإضافة الديون -->
+  <div class="form-container">
+    <input type="text" id="description" placeholder="وصف الدين" required />
+    <input type="number" id="amount" placeholder="المبلغ" required />
+    <button onclick="addDebt('dainer')">دائن</button>
+    <button onclick="addDebt('madeen')">مدين</button>
+  </div>
+
+  <!-- الجدول لعرض الديون -->
+  <h3>الديون الدائنة</h3>
+  <table id="dainerTable">
+    <thead>
+      <tr>
+        <th>وصف الدين</th>
+        <th>المبلغ</th>
+        <th>إجراء</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- الدين الدائن سيتم إضافته هنا -->
+    </tbody>
+  </table>
+
+  <h3>الديون المدينة</h3>
+  <table id="madeenTable">
+    <thead>
+      <tr>
+        <th>وصف الدين</th>
+        <th>المبلغ</th>
+        <th>إجراء</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- الدين المدين سيتم إضافته هنا -->
+    </tbody>
+  </table>
+
+  <!-- المجموع الكلي -->
+  <div class="total">
+    <p>المجموع الكلي للديون الدائنة: <span id="totalDainer">0</span> دينار</p>
+    <p>المجموع الكلي للديون المدينة: <span id="totalMadeen">0</span> دينار</p>
+  </div>
+
+  <script>
+    let totalDainer = 0;
+    let totalMadeen = 0;
+
+    // تحميل البيانات من localStorage عند تحميل الصفحة
+    window.onload = function() {
+      loadDebts();
+    };
+
+    // دالة لتحميل الديون من localStorage
+    function loadDebts() {
+      let dainerDebts = JSON.parse(localStorage.getItem('dainerDebts')) || [];
+      let madeenDebts = JSON.parse(localStorage.getItem('madeenDebts')) || [];
+
+      // تنظيف الجداول
+      document.getElementById('dainerTable').querySelector('tbody').innerHTML = '';
+      document.getElementById('madeenTable').querySelector('tbody').innerHTML = '';
+
+      // تحميل الديون الدائنة
+      dainerDebts.forEach((debt, index) => {
+        addDebtRow(debt.description, debt.amount, 'dainer', index);
+      });
+
+      // تحميل الديون المدينة
+      madeenDebts.forEach((debt, index) => {
+        addDebtRow(debt.description, debt.amount, 'madeen', index);
+      });
+
+      // تحديث المجموع الكلي
+      totalDainer = dainerDebts.reduce((acc, debt) => acc + debt.amount, 0);
+      totalMadeen = madeenDebts.reduce((acc, debt) => acc + debt.amount, 0);
+      document.getElementById('totalDainer').innerText = totalDainer.toFixed(2);
+      document.getElementById('totalMadeen').innerText = totalMadeen.toFixed(2);
+    }
+
+    // دالة لإضافة الدين إلى الجدول
+    function addDebt(type) {
+      let description = document.getElementById('description').value;
+      let amount = parseFloat(document.getElementById('amount').value);
+
+      if (description && amount) {
+        // إضافة الصف إلى الجدول
+        addDebtRow(description, amount, type);
+
+        // تحديث المجموع الكلي
+        if (type === 'dainer') {
+          totalDainer += amount;
+          document.getElementById('totalDainer').innerText = totalDainer.toFixed(2);
+
+          // حفظ الدين في localStorage
+          let dainerDebts = JSON.parse(localStorage.getItem('dainerDebts')) || [];
+          dainerDebts.push({ description, amount });
+          localStorage.setItem('dainerDebts', JSON.stringify(dainerDebts));
+        } else if (type === 'madeen') {
+          totalMadeen += amount;
+          document.getElementById('totalMadeen').innerText = totalMadeen.toFixed(2);
+
+          // حفظ الدين في localStorage
+          let madeenDebts = JSON.parse(localStorage.getItem('madeenDebts')) || [];
+          madeenDebts.push({ description, amount });
+          localStorage.setItem('madeenDebts', JSON.stringify(madeenDebts));
+        }
+
+        // مسح الحقول بعد الإضافة
+        document.getElementById('description').value = '';
+        document.getElementById('amount').value = '';
+      } else {
+        alert('يرجى تعبئة جميع الحقول');
+      }
+    }
+
+    // دالة لإضافة صف في الجدول مع زر الحذف
+    function addDebtRow(description, amount, type, index) {
+      let tableBody = (type === 'dainer') ? document.getElementById('dainerTable').querySelector('tbody') : document.getElementById('madeenTable').querySelector('tbody');
+      
+      let row = tableBody.insertRow();
+      row.insertCell(0).innerText = description;
+      row.insertCell(1).innerText = amount;
+
+      // إضافة زر الحذف
+      let deleteCell = row.insertCell(2);
+      let deleteButton = document.createElement('button');
+      deleteButton.innerText = 'حذف';
+      deleteButton.style.backgroundColor = '#dc3545';
+      deleteButton.style.border = 'none';
+      deleteButton.style.color = 'white';
+      deleteButton.style.cursor = 'pointer';
+      deleteButton.onclick = function() {
+        deleteDebt(description, amount, type, index);
+      };
+      deleteCell.appendChild(deleteButton);
+    }
+
+    // دالة لحذف الدين
+    function deleteDebt(description, amount, type, index) {
+      if (type === 'dainer') {
+        totalDainer -= amount;
+        document.getElementById('totalDainer').innerText = totalDainer.toFixed(2);
+
+        // حذف الدين من localStorage
+        let dainerDebts = JSON.parse(localStorage.getItem('dainerDebts')) || [];
+        dainerDebts.splice(index, 1);
+        localStorage.setItem('dainerDebts', JSON.stringify(dainerDebts));
+      } else if (type === 'madeen') {
+        totalMadeen -= amount;
+        document.getElementById('totalMadeen').innerText = totalMadeen.toFixed(2);
+
+        // حذف الدين من localStorage
+        let madeenDebts = JSON.parse(localStorage.getItem('madeenDebts')) || [];
+        madeenDebts.splice(index, 1);
+        localStorage.setItem('madeenDebts', JSON.stringify(madeenDebts));
+      }
+
+      // إعادة تحميل البيانات بعد الحذف
+      loadDebts();
+    }
+  </script>
+
+</body>
+</html>
